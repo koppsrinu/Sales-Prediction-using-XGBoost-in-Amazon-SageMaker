@@ -1,10 +1,11 @@
-# Sales-Prediction-using-XGBoost-in-Amazon-SageMaker
+### Sales-Prediction-using-XGBoost-in-Amazon-SageMaker
 
 IAM and S3 Access Notes
 Ensure the IAM Role has the following policies attached:
 •	AmazonSageMakerFullAccess
 •	AmazonS3FullAccess (or specific bucket policy)
-Bucket policy to allow SageMaker access:
+Bucket policy to allow SageMaker access: ###
+
 {
   "Version": "2012-10-17",
   "Statement": [
