@@ -1,0 +1,62 @@
+#Step 2: Define Environment
+Use a Conda Python 3 kernel or SageMaker Notebook.
+Import required libraries:
+import sagemaker
+from sagemaker import get_execution_role
+from sagemaker.estimator import Estimator
+from sagemaker.inputs import TrainingInput
+from sagemaker.image_uris import retrieve
+________________________________________
+#Step 3: Configure Training Job
+sagemaker_session = sagemaker.Session()
+bucket = "vaibhavisalesreview"
+prefix = "sales-prediction"
+region = sagemaker_session.boto_region_name
+role = "arn:aws:iam::084375576703:role/service-role/AmazonSageMaker-ExecutionRole-20250408T144912"
+input_data = f"s3://{bucket}/{prefix}/train/train.txt"
+
+container = retrieve("xgboost", region, version="1.5-1")
+
+hyperparameters = {
+    "max_depth": "5",
+    "eta": "0.2",
+    "gamma": "4",
+    "min_child_weight": "6",
+    "subsample": "0.7",
+    "objective": "reg:squarederror",
+    "num_round": "50"
+}
+
+xgb = Estimator(
+    image_uri=container,
+    role=role,
+    instance_count=1,
+    instance_type="ml.m5.large",
+    volume_size=5,
+    max_run=3600,
+    input_mode="File",
+    output_path=f"s3://{bucket}/{prefix}/output",
+    sagemaker_session=sagemaker_session,
+    hyperparameters=hyperparameters
+)
+
+train_input = TrainingInput(
+    s3_data=input_data,
+    content_type="text/csv"
+)
+
+xgb.fit({"train": train_input})
+________________________________________
+#Step 4: Deploy Model
+#After successful training, deploy the model:
+predictor = xgb.deploy(
+    initial_instance_count=1,
+    instance_type="ml.m5.large"
+)
+________________________________________
+#Step 5: Make Predictions
+#Send test data for prediction:
+predictor.content_type = 'text/csv'
+test_input = "30.0,4000"  # Replace with actual test features
+result = predictor.predict(test_input)
+print("Predicted Sales:", result)
